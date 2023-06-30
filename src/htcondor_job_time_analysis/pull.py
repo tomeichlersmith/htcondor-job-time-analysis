@@ -48,7 +48,7 @@ def __clusters_expand(*args):
             schedname = socket.gethostname()
         else:
             params = arg.split(':')
-            if len(params) != 2 or not params[0].isdigi():
+            if len(params) != 2 or not params[0].isdigit():
                 raise ValueError(f'Cluster {arg} is not of the form <cluster_id>:<submitter>')
             clusterid = int(params[0])
             schedname = params[1]
@@ -61,7 +61,7 @@ def __clusters_expand(*args):
             if len(matches) > 1:
                 raise ValueError(f'{schedname} matches more than on scheduler {matches}. Be more precise!')
             schedname = matches[0]
-        clusters.append((cluster_id, __clusters_expand.__schedd_lut__[schedname]))
+        clusters.append((clusterid, __clusters_expand.__schedd_lut__[schedname]))
     return clusters
 
 
