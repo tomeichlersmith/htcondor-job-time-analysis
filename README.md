@@ -25,3 +25,9 @@ Then you can start pulling job information from HTCondor and making plots from i
 hjta-pull my-job-times.csv <batch id> <batch id2> ...
 hjta-plot my-job-times.csv all
 ```
+
+### Development
+If you wish to help develop this package, make sure to install the style checker and auto-formatter.
+```
+pip install -e .[dev]
+```

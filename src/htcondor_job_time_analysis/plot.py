@@ -20,7 +20,9 @@ def plotter(func):
     plotter.__registry__[func.__name__] = func
     return func
 
+
 plotter.__registry__ = dict()
+
 
 @plotter
 def execute_vs_transfer(df: pd.DataFrame):
@@ -43,7 +45,7 @@ def execute_vs_transfer(df: pd.DataFrame):
     ax_histx.tick_params(direction='in', labelbottom=False)
     ax_histy = plt.axes(rect_histy)
     ax_histy.tick_params(direction='in', labelleft=False)
-    ax_text = plt.axes([left+width+spacing,bottom+height+spacing,0.2,0.2])
+    ax_text = plt.axes([left+width+spacing, bottom+height+spacing, 0.2, 0.2])
     ax_text.axis('off')
 
     cluster_time = (df['TransferOutFinished'].max() - df['QDate'].min())/60
@@ -57,15 +59,15 @@ def execute_vs_transfer(df: pd.DataFrame):
         f'Total Execute: {tot_execute} s',
         f'Eff N cores: {tot_execute/(cluster_time*60):.2f}'
     ]
-    ax_text.text(0.01,0.01,'\n'.join(lines),verticalalignment='bottom',horizontalalignment='left')
+    ax_text.text(0.01, 0.01, '\n'.join(lines), verticalalignment='bottom', horizontalalignment='left')
 
     # the scatter plot
     ax_scatter.scatter(df['ExecuteTime'], df['TransferTime'])
 
     # separate so we can get scatter limits for histogram
     ax_histy.hist(
-        df['TransferTime'], 
-        bins=50, 
+        df['TransferTime'],
+        bins=50,
         range=ax_scatter.get_ylim(),
         orientation='horizontal', histtype='step'
     )
@@ -75,23 +77,23 @@ def execute_vs_transfer(df: pd.DataFrame):
     worst_transfer = df['TransferFrac'].max()
     mean_transfer = df['TransferFrac'].mean()
     ax_scatter.axline(
-        (0,0),
+        (0, 0),
         slope=worst_transfer,
         label=f'Worst Transfer ({worst_transfer*100:.2f}%)',
         color='black'
     )
     ax_scatter.axline(
-        (0,0),
+        (0, 0),
         slope=mean_transfer,
-        label=f'Mean Transfer ({mean_transfer*100:.2f}%)', 
+        label=f'Mean Transfer ({mean_transfer*100:.2f}%)',
         color='gray'
     )
 
     ax_scatter.legend()
 
     ax_histx.hist(
-        df['ExecuteTime'], 
-        range=ax_scatter.get_xlim(), 
+        df['ExecuteTime'],
+        range=ax_scatter.get_xlim(),
         bins=50,
         histtype='step'
     )
@@ -106,31 +108,31 @@ def execute_vs_transfer(df: pd.DataFrame):
 @plotter
 def transfer_hist(df: pd.DataFrame):
     """histogram the different transfer time samples"""
-    for k in ['TransferIn','TransferInQueueTime','TransferOut','TransferOutQueueTime']:
+    for k in ['TransferIn', 'TransferInQueueTime', 'TransferOut', 'TransferOutQueueTime']:
         plt.hist(
-                df[k],
-                bins=[-1]+np.logspace(0,6,50),
-                label=k, histtype='step',
-                #density=True,
-                ls = '--' if 'Queue' in k else '-',
-                color = 'tab:blue' if 'In' in k else 'tab:red',
-                lw=2
-                )
+            df[k],
+            bins=[-1]+np.logspace(0, 6, 50),
+            label=k, histtype='step',
+            # density=True,
+            ls='--' if 'Queue' in k else '-',
+            color='tab:blue' if 'In' in k else 'tab:red',
+            lw=2
+        )
     plt.yscale('log')
     plt.xscale('log')
-    plt.ylabel('Jobs')# / Bin Width')
+    plt.ylabel('Jobs')  # / Bin Width')
     plt.xlabel('Time [s]')
     plt.legend(
         ncol=2,
         loc='lower center',
-        bbox_to_anchor=(0.5,1.)
+        bbox_to_anchor=(0.5, 1.)
     )
 
 
 @plotter
 def transfer_by_index(df: pd.DataFrame):
     """plot the transfer queue time by job index"""
-    sl = df.sort_values(['ClusterId','ProcId']).reset_index()
+    sl = df.sort_values(['ClusterId', 'ProcId']).reset_index()
     plt.scatter(
         sl.index, sl['TransferInQueueTime'],
         alpha=0.1, marker='s',
@@ -138,7 +140,7 @@ def transfer_by_index(df: pd.DataFrame):
     )
     plt.scatter(
         sl.index, sl['TransferOutQueueTime'],
-        alpha=0.1, 
+        alpha=0.1,
         label='Out Queue'
     )
     plt.ylabel('Time [s]')
@@ -194,6 +196,7 @@ def main():
     for name in selected_plots:
         plotter.__registry__[name](df)
         save_and_close(name)
+
 
 if __name__ == '__main__':
     main()

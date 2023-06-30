@@ -48,6 +48,7 @@ if __name__ == '__main__':
         maintainer='Tom Eichlersmith',
         maintainer_email='eichl008@umn.edu',
         install_requires=requirements,
+        extras_require['dev'] = parse_requirements('requirements.dev.txt'),
         keywords=['htcondor_job_time_analysis'],
         package_dir={'': 'src'},
         packages=find_packages('src'),
