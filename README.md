@@ -17,7 +17,7 @@ pip install --upgrade
 # upgrade setuptools to avoid warnings
 pip install --upgrade setuptools
 # install this
-pip install git+https://github.com/tomeichlersmith/htcondor-job-time-analysis@v0.0.1
+pip install git+https://github.com/tomeichlersmith/htcondor-job-time-analysis@v0.0.2
 ```
 
 Then you can start pulling job information from HTCondor and making plots from it.
