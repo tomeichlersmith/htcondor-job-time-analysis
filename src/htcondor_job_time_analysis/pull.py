@@ -144,7 +144,9 @@ def main():
         nargs='+',
         help='cluster of jobs to pull data for in the format: '
         '<cluster_id>[:<submitting-node>] where the default submitting node '
-        'is the current host '+socket.gethostname()
+        'is the current host '+socket.gethostname()+'. The submitting node '
+        'can be provided by its shortened name if the shortened name only '
+        'matches one option.'
     )
 
     clargs = parser.parse_args()
