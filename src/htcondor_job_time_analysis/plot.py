@@ -180,7 +180,7 @@ def main():
     selected_plots = clargs.plot
     for name in selected_plots:
         if name not in plot_options and name != 'all':
-            raise ValueError(f'Plot "{name}" is not one of the options.')
+            parser.error(f'Plot "{name}" is not one of the options {plot_options+["all"]}.')
     if 'all' in selected_plots:
         selected_plots = plot_options
 
