@@ -3,6 +3,31 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import math
+
+
+def _characteristic_size(size: float):
+    """deduce a characteristic unit for the input size in bytes"""
+    # the highest power of 1024 that is below the average size
+    power = int(math.log2(size) // 10)
+    return 1024**power, _characteristic_unit.units[power]
+
+
+_characteristic_size.units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB']
+
+
+def _characteristic_time(time: float):
+    """deduce a characteristic unit for the input time in seconds"""
+    units = [
+        (1, 's'),
+        (60, 'min'),
+        (60*60, 'hr'),
+        (60*60*24, 'days'),
+        ]
+    for conv, name in reversed(units):
+        if time/conv > 1:
+            return conv, name
+    return units[0]
 
 
 def plotter(func):
@@ -48,43 +73,48 @@ def execute_vs_transfer(df: pd.DataFrame):
     ax_text = plt.axes([left+width+spacing, bottom+height+spacing, 0.2, 0.2])
     ax_text.axis('off')
 
-    cluster_time = (df['TransferOutFinished'].max() - df['QDate'].min())/60
+    cluster_time = (df['TransferOutFinished'].max() - df['QDate'].min())
+    ct_c, ct_u = _characteristic_time(cluster_time)
     mean_job_time = df['JobTime'].mean()
+    c, u = _characteristic_time(mean_job_time)
     tot_execute = df['ExecuteTime'].sum()
     df['TransferFrac'] = df['TransferTime']/df['ExecuteTime']
     lines = [
-        f'Total Submit to Complete: {cluster_time:.2f} min',
+        f'Total Submit to Complete: {cluster_time/ct_c:.2f} {ct_u}',
         f'Num Jobs: {len(df.index)}',
-        f'Mean Job Time (including transfer): {mean_job_time:.2f} s',
+        f'Mean Job Time (including transfer): {mean_job_time/c:.2f} {u}',
         f'Total Execute: {tot_execute} s',
-        f'Eff N cores: {tot_execute/(cluster_time*60):.2f}'
+        f'Eff N cores: {tot_execute/cluster_time:.2f}'
     ]
     ax_text.text(0.01, 0.01, '\n'.join(lines), verticalalignment='bottom', horizontalalignment='left')
 
+    tconv, tunit = _characteristic_time(df['TransferTime'].mean())
+    econv, eunit = _characteristic_time(df['ExecuteTime'].mean())
+
     # the scatter plot
-    ax_scatter.scatter(df['ExecuteTime'], df['TransferTime'])
+    ax_scatter.scatter(df['ExecuteTime']/econv, df['TransferTime']/tconv)
 
     # separate so we can get scatter limits for histogram
     ax_histy.hist(
-        df['TransferTime'],
+        df['TransferTime']/tconv,
         bins=50,
         range=ax_scatter.get_ylim(),
         orientation='horizontal', histtype='step'
     )
-    ax_scatter.set_xlabel('Execution Time [s]')
-    ax_scatter.set_ylabel('Transfer Time [s]')
+    ax_scatter.set_xlabel(f'Execution Time [{eunit}]')
+    ax_scatter.set_ylabel(f'Transfer Time [{tunit}]')
 
     worst_transfer = df['TransferFrac'].max()
     mean_transfer = df['TransferFrac'].mean()
     ax_scatter.axline(
         (0, 0),
-        slope=worst_transfer,
+        slope=worst_transfer*econv/tconv,
         label=f'Worst Transfer ({worst_transfer*100:.2f}%)',
         color='black'
     )
     ax_scatter.axline(
         (0, 0),
-        slope=mean_transfer,
+        slope=mean_transfer*econv/tconv,
         label=f'Mean Transfer ({mean_transfer*100:.2f}%)',
         color='gray'
     )
@@ -92,7 +122,7 @@ def execute_vs_transfer(df: pd.DataFrame):
     ax_scatter.legend()
 
     ax_histx.hist(
-        df['ExecuteTime'],
+        df['ExecuteTime']/econv,
         range=ax_scatter.get_xlim(),
         bins=50,
         histtype='step'
@@ -146,6 +176,33 @@ def transfer_by_index(df: pd.DataFrame):
     plt.ylabel('Time [s]')
     plt.xlabel('Job Index (sort by ClusterID then ProcId)')
     plt.legend()
+
+
+@plotter
+def output_filesize(df: pd.DataFrame):
+    """plot a histogram of the output filesize"""
+    # deduce characteristic output size by calculating mean
+    p, unit = _characteristic_unit(df['BytesSent'].mean())
+    plt.hist(
+        df['BytesSent']/(1024**p),
+        bins='auto',
+        histtype='step',
+        lw=2
+    )
+    plt.xlabel(f'Data Copied out by Condor [{unit}]')
+    plt.ylabel('Jobs')
+
+
+@plotter
+def outputsize_transfertime(df: pd.DataFrame):
+    """compare output filesize vs transfer time"""
+    p, unit = _characteristic_unit(df['BytesSent'].mean())
+    plt.scatter(
+        df['BytesSent']/(1024**p),
+        df['TransferOut']
+    )
+    plt.xlabel(f'Data copied out by Condor [{unit}]')
+    plt.ylabel('Transfer Out Time [s]')
 
 
 def main():

@@ -104,7 +104,8 @@ def acquire_timing(*args):
         'TransferInFinished': [],
         'TransferOutQueued': [],
         'TransferOutStarted': [],
-        'TransferOutFinished': []
+        'TransferOutFinished': [],
+        'BytesSent': [],
     }
 
     for cluster_id, submitter in clusters:
