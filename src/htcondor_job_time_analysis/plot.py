@@ -8,12 +8,10 @@ import math
 
 def _characteristic_size(size: float):
     """deduce a characteristic unit for the input size in bytes"""
+    units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB']
     # the highest power of 1024 that is below the average size
     power = int(math.log2(size) // 10)
-    return 1024**power, _characteristic_unit.units[power]
-
-
-_characteristic_size.units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB']
+    return 1024**power, units[power]
 
 
 def _characteristic_time(time: float):
@@ -182,9 +180,9 @@ def transfer_by_index(df: pd.DataFrame):
 def output_filesize(df: pd.DataFrame):
     """plot a histogram of the output filesize"""
     # deduce characteristic output size by calculating mean
-    p, unit = _characteristic_unit(df['BytesSent'].mean())
+    p, unit = _characteristic_size(df['BytesSent'].mean())
     plt.hist(
-        df['BytesSent']/(1024**p),
+        df['BytesSent']/p,
         bins='auto',
         histtype='step',
         lw=2
@@ -196,9 +194,9 @@ def output_filesize(df: pd.DataFrame):
 @plotter
 def outputsize_transfertime(df: pd.DataFrame):
     """compare output filesize vs transfer time"""
-    p, unit = _characteristic_unit(df['BytesSent'].mean())
+    p, unit = _characteristic_size(df['BytesSent'].mean())
     plt.scatter(
-        df['BytesSent']/(1024**p),
+        df['BytesSent']/p,
         df['TransferOut']
     )
     plt.xlabel(f'Data copied out by Condor [{unit}]')
